@@ -1,4 +1,4 @@
-mat_mul
+matmul-*
 *.o
 task_*.stdout
 task_*.stderr

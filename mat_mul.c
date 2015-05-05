@@ -14,9 +14,19 @@ int print_matrix = 0;
 int validation = 0;
 
 void mat_mul(float c[NDIM][NDIM], float a[NDIM][NDIM], float b[NDIM][NDIM]) {
+#if defined(KIJ)
+  for (int k = 0; k < NDIM; ++k) {
+    for (int i = 0; i < NDIM; ++i) {
+      for (int j = 0; j < NDIM; ++j) {
+#elif defined(JKI)
+  for (int j = 0; j < NDIM; ++j) {
+    for (int k = 0; k < NDIM; ++k) {
+      for (int i = 0; i < NDIM; ++i) {
+#else
   for (int i = 0; i < NDIM; ++i) {
     for (int j = 0; j < NDIM; ++j) {
       for (int k = 0; k < NDIM; ++k) {
+#endif
         c[i][j] += a[i][k] * b[k][j];
       }
     }
