@@ -26,4 +26,9 @@ clean:
 	rm -f $(TARGET) *.o task_*.stderr task_*.stdout
 
 run: $(TARGET)
-	thorq --add ./$(TARGET) -v
+	./matmul-ikj
+	./matmul-kij
+	./matmul-ijk
+	./matmul-jik
+	./matmul-kji
+	./matmul-jki
