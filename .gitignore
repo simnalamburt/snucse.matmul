@@ -1,0 +1,4 @@
+mat_mul
+*.o
+task_*.stdout
+task_*.stderr
