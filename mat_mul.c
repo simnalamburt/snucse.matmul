@@ -18,6 +18,8 @@ inline static int min(int lhs, int rhs) {
 }
 
 void mat_mul(float c[NDIM][NDIM], float a[NDIM][NDIM], float b[NDIM][NDIM]) {
+  printf("%d\n", B);
+
   for (int ii = 0; ii < NDIM; ii += B) {
     for (int jj = 0; jj < NDIM; jj += B) {
       for (int kk = 0; kk < NDIM; kk += B) {
