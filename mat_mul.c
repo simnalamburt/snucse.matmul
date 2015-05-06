@@ -4,7 +4,7 @@
 #include <sys/time.h>
 #include "timers.h"
 
-#define NDIM    2048
+#define NDIM 2048
 
 float a[NDIM][NDIM];
 float b[NDIM][NDIM];
@@ -13,17 +13,10 @@ float c[NDIM][NDIM];
 int print_matrix = 0;
 int validation = 0;
 
-void mat_mul( float c[NDIM][NDIM], float a[NDIM][NDIM], float b[NDIM][NDIM] )
-{
-  int i, j, k;
-
-  // C = AB
-  for( i = 0; i < NDIM; i++ )
-  {
-    for( j = 0; j < NDIM; j++ )
-    {
-      for( k = 0; k < NDIM; k++ )
-      {
+void mat_mul(float c[NDIM][NDIM], float a[NDIM][NDIM], float b[NDIM][NDIM]) {
+  for (int i = 0; i < NDIM; ++i) {
+    for (int j = 0; j < NDIM; ++j) {
+      for (int k = 0; k < NDIM; ++k) {
         c[i][j] += a[i][k] * b[k][j];
       }
     }
