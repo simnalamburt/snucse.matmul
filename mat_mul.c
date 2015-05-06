@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <pthread.h>
 #include <sys/time.h>
 #include "timers.h"
 
@@ -13,13 +14,35 @@ float c[NDIM][NDIM];
 int print_matrix = 0;
 int validation = 0;
 
-void mat_mul(float c[NDIM][NDIM], float a[NDIM][NDIM], float b[NDIM][NDIM]) {
-  for (int i = 0; i < NDIM; ++i) {
+typedef struct {
+  int begin, end;
+} data_t;
+
+void per_thread(void* param) {
+  data_t* data = (data_t*)param;
+  for (int i = data->begin; i < data->end; ++i) {
     for (int j = 0; j < NDIM; ++j) {
       for (int k = 0; k < NDIM; ++k) {
         c[i][j] += a[i][k] * b[k][j];
       }
     }
+  }
+}
+
+void mat_mul(float c[NDIM][NDIM], float a[NDIM][NDIM], float b[NDIM][NDIM]) {
+  size_t number = THREAD_COUNT;
+  pthread_t thread[number];
+  data_t data[number];
+
+  for (size_t i = 0; i < number; ++i) {
+    data[i].begin = NDIM*i/number;
+    data[i].end = NDIM*(i+1)/number;
+  }
+  for (size_t i = 0; i < number; ++i) {
+    pthread_create(&thread[i], NULL, per_thread, &data[i]);
+  }
+  for (size_t i = 0; i < number; ++i) {
+    pthread_join(thread[i], NULL);
   }
 }
 
