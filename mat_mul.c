@@ -5,7 +5,7 @@
 #include <sys/time.h>
 #include "timers.h"
 
-#define NDIM 2048
+#define NDIM (1024*JOB_COUNT)
 
 float a[NDIM][NDIM];
 float b[NDIM][NDIM];
@@ -30,7 +30,7 @@ void per_thread(void* param) {
 }
 
 void mat_mul(float c[NDIM][NDIM], float a[NDIM][NDIM], float b[NDIM][NDIM]) {
-  size_t number = THREAD_COUNT;
+  size_t number = JOB_COUNT*JOB_COUNT;
   pthread_t thread[number];
   data_t data[number];
 
