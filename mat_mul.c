@@ -13,11 +13,22 @@ float c[NDIM][NDIM];
 int print_matrix = 0;
 int validation = 0;
 
+inline static int min(int lhs, int rhs) {
+  return lhs < rhs ? lhs : rhs;
+}
+
 void mat_mul(float c[NDIM][NDIM], float a[NDIM][NDIM], float b[NDIM][NDIM]) {
-  for (int i = 0; i < NDIM; ++i) {
-    for (int j = 0; j < NDIM; ++j) {
-      for (int k = 0; k < NDIM; ++k) {
-        c[i][j] += a[i][k] * b[k][j];
+  for (int ii = 0; ii < NDIM; ii += B) {
+    for (int jj = 0; jj < NDIM; jj += B) {
+      for (int kk = 0; kk < NDIM; kk += B) {
+        // Per block
+        for (int i = ii; i < min(ii+B, NDIM); ++i) {
+          for (int j = jj; j < min(jj+B, NDIM); ++j) {
+            for (int k = kk; k < min(kk+B, NDIM); ++k) {
+              c[i][j] += a[i][k] * b[k][j];
+            }
+          }
+        }
       }
     }
   }

@@ -10,6 +10,8 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
 
+mat_mul.o: CFLAGS += -DB=4
+
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
