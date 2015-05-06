@@ -25,7 +25,7 @@ clean:
 	rm -f $(TARGET) *.o task_*.stderr task_*.stdout
 
 run: $(TARGET)
-	./mat_mul_1
-	./mat_mul_4
-	./mat_mul_9
-	./mat_mul_16
+	thorq --add ./mat_mul_1
+	thorq --add ./mat_mul_4
+	thorq --add ./mat_mul_9
+	thorq --add ./mat_mul_16

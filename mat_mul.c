@@ -31,6 +31,7 @@ void per_thread(void* param) {
 
 void mat_mul(float c[NDIM][NDIM], float a[NDIM][NDIM], float b[NDIM][NDIM]) {
   size_t number = JOB_COUNT*JOB_COUNT;
+  printf("%d\n", number);
   pthread_t thread[number];
   data_t data[number];
 
