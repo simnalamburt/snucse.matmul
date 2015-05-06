@@ -4,7 +4,7 @@
 #include <sys/time.h>
 #include "timers.h"
 
-#define NDIM 2048
+#define NDIM 1024
 
 float a[NDIM][NDIM];
 float b[NDIM][NDIM];
