@@ -5,11 +5,11 @@
 #include <sys/time.h>
 #include "timers.h"
 
-#define NDIM (1024*JOB_COUNT)
+static int number, NDIM;
 
-float a[NDIM][NDIM];
-float b[NDIM][NDIM];
-float c[NDIM][NDIM];
+float **a;
+float **b;
+float **c;
 
 int print_matrix = 0;
 int validation = 0;
@@ -29,9 +29,7 @@ void per_thread(void* param) {
   }
 }
 
-void mat_mul(float c[NDIM][NDIM], float a[NDIM][NDIM], float b[NDIM][NDIM]) {
-  size_t number = JOB_COUNT*JOB_COUNT;
-  printf("%d\n", number);
+void mat_mul(float **c, float **a, float **b) {
   pthread_t thread[number];
   data_t data[number];
 
@@ -49,7 +47,7 @@ void mat_mul(float c[NDIM][NDIM], float a[NDIM][NDIM], float b[NDIM][NDIM]) {
 
 /************************** DO NOT TOUCH BELOW HERE ******************************/
 
-void check_mat_mul( float c[NDIM][NDIM], float a[NDIM][NDIM], float b[NDIM][NDIM] )
+void check_mat_mul(float **c, float **a, float **b)
 {
   int i, j, k;
   float sum;
@@ -83,7 +81,7 @@ void check_mat_mul( float c[NDIM][NDIM], float a[NDIM][NDIM], float b[NDIM][NDIM
     printf("FAILED.\n");
 }
 
-void print_mat( float mat[NDIM][NDIM] )
+void print_mat( float **mat )
 {
   int i, j;
 
@@ -107,30 +105,21 @@ void print_help(const char* prog_name)
   printf("  -h : print this page.\n");
 }
 
-void parse_opt(int argc, char** argv)
-{
-  int opt;
+void parse_opt(int argc, char** argv) {
+  if (argc != 3) {
+    fprintf(stderr, "%s <thread count> <matrix dim>\n", argv[0]);
+    exit(1);
+  }
+  number = atoi(argv[1]);
+  NDIM = atoi(argv[2]);
 
-  while( (opt = getopt(argc, argv, "pvhikjs:")) != -1 )
-  {
-    switch(opt)
-    {
-      case 'p':
-        // print matrix data.
-        print_matrix = 1;
-        break;
-
-      case 'v':
-        // validation
-        validation = 1;
-        break;
-
-      case 'h':
-      default:
-        print_help(argv[0]);
-        exit(0);
-        break;
-    }
+  a = malloc(NDIM * sizeof *a);
+  b = malloc(NDIM * sizeof *b);
+  c = malloc(NDIM * sizeof *c);
+  for (int i = 0; i < NDIM; ++i) {
+    a[i] = malloc(NDIM * sizeof **a);
+    b[i] = malloc(NDIM * sizeof **b);
+    c[i] = malloc(NDIM * sizeof **c);
   }
 }
 
@@ -154,7 +143,7 @@ int main(int argc, char** argv)
   mat_mul( c, a, b );
   timer_stop(1);
 
-  printf("Time elapsed : %lf sec\n", timer_read(1));
+  printf("%d,%lf\n", number, timer_read(1));
 
 
   if( validation )
