@@ -1,5 +1,5 @@
-TARGET=mat_mul
-OBJS=mat_mul.o timers.o
+TARGET=matmul
+OBJS=main.o timers.o
 
 CC=gcc
 CFLAGS=-g -O3 -Wall -Wextra -std=c99
@@ -10,7 +10,7 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
 
-mat_mul.o: CFLAGS += -DTHREAD_COUNT=4
+main.o: CFLAGS += -DTHREAD_COUNT=4
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
