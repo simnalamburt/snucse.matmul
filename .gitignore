@@ -1,4 +1,3 @@
-matmul
-*.o
+bin
 task_*.stdout
 task_*.stderr

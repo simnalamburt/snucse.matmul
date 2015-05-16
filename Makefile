@@ -1,17 +1,14 @@
-TARGET=matmul
-OBJS=main.o
+TARGET=bin
 
 CC=gcc
 CFLAGS=-O3 -Wall -Wextra -std=c99
 LDFLAGS=-lpthread -lrt
 
-all: $(TARGET)
-
-$(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@
+all: main.c
+	$(CC) $(CFLAGS) main.c $(LDFLAGS) -o $(TARGET)
 
 clean:
-	rm -f $(TARGET) *.o
+	rm -f $(TARGET)
 
 run: $(TARGET)
 	thorq --add ./$(TARGET) -v
