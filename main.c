@@ -21,8 +21,8 @@ typedef struct {
 void per_thread(void* param) {
   data_t* data = (data_t*)param;
   for (int i = data->begin; i < data->end; ++i) {
-    for (int j = 0; j < NDIM; ++j) {
-      for (int k = 0; k < NDIM; ++k) {
+    for (int k = 0; k < NDIM; ++k) {
+      for (int j = 0; j < NDIM; ++j) {
         c[i][j] += a[i][k] * b[k][j];
       }
     }
