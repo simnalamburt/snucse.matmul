@@ -10,8 +10,6 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
 
-main.o: CFLAGS += -DTHREAD_COUNT=4
-
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
