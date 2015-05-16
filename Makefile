@@ -1,9 +1,9 @@
 TARGET=matmul
-OBJS=main.o timers.o
+OBJS=main.o
 
 CC=gcc
 CFLAGS=-O3 -Wall -Wextra -std=c99
-LDFLAGS=-pthread
+LDFLAGS=-lpthread -lrt
 
 all: $(TARGET)
 

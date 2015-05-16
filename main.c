@@ -1,10 +1,10 @@
+#define _POSIX_C_SOURCE 199309L
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <getopt.h>
 #include <pthread.h>
-#include <sys/time.h>
-#include "timers.h"
+#include <time.h>
 
 #define NDIM 2048
 static const int THREAD_COUNT = 4;
@@ -100,6 +100,23 @@ void parse_opt(int argc, char* argv[]) {
   }
 }
 
+
+typedef struct timespec timespec_t;
+
+// call this function to start a nanosecond-resolution timer
+timespec_t timer_start() {
+  timespec_t begin;
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin);
+  return begin;
+}
+
+// call this function to end a timer, returning nanoseconds elapsed as a long
+long timer_end(timespec_t begin) {
+  timespec_t end;
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+  return end.tv_nsec - begin.tv_nsec;
+}
+
 int main(int argc, char* argv[]) {
   parse_opt(argc, argv);
 
@@ -112,11 +129,11 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  timer_start(1);
+  timespec_t begin = timer_start();
   mat_mul();
-  timer_stop(1);
+  long elapsed = timer_end(begin);
 
-  printf("Time elapsed : %lf sec\n", timer_read(1));
+  printf("Time elapsed : %lf ms\n", elapsed / 1000000.0);
 
   if (validation) { check_mat_mul(); }
 
