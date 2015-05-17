@@ -1,11 +1,11 @@
 TARGET=bin
 
-CC=clang
-CFLAGS=-O3 -Wall -Wextra -std=c99
+CC=g++
+CFLAGS=-O3 -Wall -Wextra -std=c++0x
 LDFLAGS=-lpthread -lrt
 
-all: main.c
-	$(CC) $(CFLAGS) main.c $(LDFLAGS) -o $(TARGET)
+all: main.cc
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $(TARGET)
 
 clean:
 	rm -f $(TARGET)

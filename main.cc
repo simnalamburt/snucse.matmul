@@ -24,13 +24,16 @@ int main(int argc, char* argv[]) {
 
     case 'h':
     default:
-      printf(
-          "USAGE: %s [-pvh]\n"
-          "\n"
-          "OPTIONS:\n"
-          "  -v : validate matrix multiplication.\n"
-          "  -h : print this page.\n"
-          , argv[0]);
+      auto format = R"(Parallel Matrix Multiplier
+
+USAGE: %s [-pvh]
+
+OPTIONS:
+-v : validate matrix multiplication.
+-h : print this page.
+)";
+
+      printf(format, argv[0]);
       exit(opt != 'h');
     }
   }
