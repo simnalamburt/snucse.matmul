@@ -79,7 +79,7 @@ OPTIONS:
   check(clGetPlatformIDs(1, &platform, NULL));
 
   cl_device_id device;
-  check(clGetDeviceIDs(platform, CL_DEVICE_TYPE_DEFAULT, 1, &device, NULL));
+  check(clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL));
 
   cl_int e;
   auto ctxt = clCreateContext(NULL, 1, &device, NULL, NULL, &e); check(e);
