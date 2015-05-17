@@ -10,6 +10,9 @@ using namespace std;
 using namespace chrono;
 
 namespace {
+  void simple(size_t, bool);
+  void tile(size_t);
+
   void check(cl_int);
   template<typename T> bool validate(const T&, const T&, const T&, size_t);
 }
@@ -49,7 +52,19 @@ OPTIONS:
     }
   }
 
+  if (width < 32768) {
+    simple(width, validation);
+  } else {
+    tile(width);
+  }
+  return 0;
+}
 
+
+
+namespace {
+
+void simple(size_t width, bool validation) {
   //
   // Initialize host buffer
   //
@@ -171,6 +186,10 @@ OPTIONS:
   check(clReleaseKernel(kernel));
   check(clReleaseProgram(program));
   check(clReleaseCommandQueue(cmdq));
+}
+
+void tile(size_t) { }
+
 }
 
 
