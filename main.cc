@@ -59,7 +59,7 @@ OPTIONS:
   auto result = unique_ptr<float[]>(new float[width*width]);
   const size_t size = width*width*sizeof(float);
 
-  cout << "Initializing matrices... ";
+  cout << "Initializing " << width << '*' << width << " sized matrices... ";
   for (size_t i = 0; i < width*width; ++i) { lhs[i] = rhs[i] = float(i) + 1.0f; }
   cout << "Done" << endl;
 
