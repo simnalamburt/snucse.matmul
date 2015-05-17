@@ -1,7 +1,6 @@
 #define _POSIX_C_SOURCE 199309L
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <getopt.h>
 #include <pthread.h>
 #include <time.h>
@@ -11,9 +10,7 @@ static float a[NDIM][NDIM], b[NDIM][NDIM], c[NDIM][NDIM];
 static bool validation = false;
 static const int THREAD_COUNT = 4;
 
-static void *per_thread(void*);
-static void mat_mul(void);
-static void validate(void);
+static void calculate(void);
 
 
 //
@@ -53,13 +50,29 @@ int main(int argc, char* argv[]) {
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin);
 
   // Calculate
-  mat_mul();
+  calculate();
 
   // Stop tiemr
   struct timespec end;
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
   printf("Time elapsed : %lf ms\n", (end.tv_nsec - begin.tv_nsec)/1000000.0);
-  if (validation) { validate(); }
+
+
+  if (!validation) { return 0; }
+
+  // Validation
+  bool ok = true;
+  for (int i = 0; i < NDIM; ++i) {
+    for (int j = 0; j < NDIM; ++j) {
+      float sum = 0;
+      for (int k = 0; k < NDIM; ++k) { sum += a[i][k] * b[k][j]; }
+
+      if (c[i][j] == sum) { continue; }
+      printf("In c[%d][%d], expected %lf but it was %lf\n", i, j, sum, c[i][j]);
+      ok = false;
+    }
+  }
+  puts(ok ? "Test passed" : "Test failed");
   return 0;
 }
 
@@ -83,7 +96,7 @@ void *per_thread(void* param) {
   return NULL;
 }
 
-void mat_mul(void) {
+void calculate(void) {
   size_t number = THREAD_COUNT;
   pthread_t thread[number];
   data_t data[number];
@@ -98,25 +111,4 @@ void mat_mul(void) {
   for (size_t i = 0; i < number; ++i) {
     pthread_join(thread[i], NULL);
   }
-}
-
-
-//
-// Validation
-//
-void validate(void) {
-  bool ok = true;
-  for (int i = 0; i < NDIM; ++i) {
-    for (int j = 0; j < NDIM; ++j) {
-      float sum = 0;
-      for (int k = 0; k < NDIM; ++k) { sum += a[i][k] * b[k][j]; }
-
-      if (c[i][j] == sum) { continue; }
-      printf("In c[%d][%d], expected %lf but it was %lf\n", i, j, sum, c[i][j]);
-      ok = false;
-    }
-  }
-
-  if (ok) { return; }
-  puts("Test failed");
 }
