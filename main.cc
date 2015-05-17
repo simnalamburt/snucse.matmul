@@ -3,16 +3,18 @@
 #include <memory>
 #include <string>
 #include <array>
+#include <chrono>
 #include <ctime>
 #include <cstring>
 #include <unistd.h>
 #include <CL/cl.h>
 
 using namespace std;
+using namespace chrono;
 
 namespace {
-  template<typename T> bool validate(const T& lhs, const T& rhs, const T& result, size_t width);
   void check(cl_int);
+  template<typename T> bool validate(const T&, const T&, const T&, size_t);
 }
 
 
@@ -67,9 +69,7 @@ OPTIONS:
   //
   // Start timer
   //
-  struct timespec begin_cpu, begin_mono;
-  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin_cpu);
-  clock_gettime(CLOCK_MONOTONIC, &begin_mono);
+  auto begin = system_clock::now();
 
 
   //
@@ -150,12 +150,8 @@ OPTIONS:
   //
   // Stop tiemr
   //
-  struct timespec end_cpu, end_mono;
-  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_cpu);
-  clock_gettime(CLOCK_MONOTONIC, &end_mono);
-  cout << "\nTime elapsed:\n"
-    "    monotonic   " << (end_mono.tv_nsec - begin_mono.tv_nsec)/1000000.0 << " ms\n"
-    "    cputime     " << (end_cpu. tv_nsec - begin_cpu. tv_nsec)/1000000.0 << " ms\n" << endl;
+  auto end = system_clock::now();
+  cout << "\nTime elapsed: " << duration<double>(end - begin).count() << "s\n" << endl;
 
 
   //
@@ -184,27 +180,6 @@ OPTIONS:
 // Error handling
 //
 namespace {
-  template<typename T>
-  bool validate(const T& lhs, const T& rhs, const T& result, size_t width) {
-    cout << ' ';
-    for (size_t i = 0; i < width; ++i) {
-      if (i%64 == 63) { cout << "\033[1D.."; }
-      if (i%4 == 3) {
-        char rotate[] = {'/', '-', '\\', '|'};
-        cout << "\033[1D" << rotate[i/4%4] << flush;
-      }
-
-      for (size_t j = 0; j < width; ++j) {
-        float sum = 0;
-        for (size_t k = 0; k < width; ++k) { sum += lhs[i*width + k]*rhs[k*width + j]; }
-
-        if (result[i*width + j] != sum) { return false; }
-      }
-    }
-    cout << "\033[1D. ";
-    return true;
-  }
-
   const char *clGetErrorMessage(cl_int error_code) {
     switch (error_code) {
     // run-time and JIT compiler errors
@@ -285,5 +260,26 @@ namespace {
     if (err == CL_SUCCESS) { return; }
     cerr << clGetErrorMessage(err) << endl;
     exit(1);
+  }
+
+  template<typename T>
+  bool validate(const T &lhs, const T &rhs, const T &result, size_t width) {
+    cout << ' ';
+    for (size_t i = 0; i < width; ++i) {
+      if (i%64 == 63) { cout << "\033[1D.."; }
+      if (i%4 == 3) {
+        char rotate[] = {'/', '-', '\\', '|'};
+        cout << "\033[1D" << rotate[i/4%4] << flush;
+      }
+
+      for (size_t j = 0; j < width; ++j) {
+        float sum = 0;
+        for (size_t k = 0; k < width; ++k) { sum += lhs[i*width + k]*rhs[k*width + j]; }
+
+        if (result[i*width + j] != sum) { return false; }
+      }
+    }
+    cout << "\033[1D. ";
+    return true;
   }
 }
