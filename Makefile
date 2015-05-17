@@ -1,6 +1,6 @@
 TARGET=bin
 
-CC=gcc
+CC=clang
 CFLAGS=-O3 -Wall -Wextra -std=c99
 LDFLAGS=-lpthread -lrt
 
