@@ -7,14 +7,9 @@
 #include <time.h>
 
 #define NDIM 2048
+static float a[NDIM][NDIM], b[NDIM][NDIM], c[NDIM][NDIM];
+static bool print_matrix = false, validation = false;
 static const int THREAD_COUNT = 4;
-
-static float a[NDIM][NDIM];
-static float b[NDIM][NDIM];
-static float c[NDIM][NDIM];
-
-static bool print_matrix = false;
-static bool validation = false;
 
 typedef struct {
   int begin, end;
