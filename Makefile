@@ -2,7 +2,7 @@ TARGET=bin
 
 CC=g++
 CFLAGS=-O3 -Wall -Wextra -std=c++0x
-LDFLAGS=-lpthread -lrt
+LDFLAGS=-lOpenCL -lrt
 
 all: main.cc
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $(TARGET)
