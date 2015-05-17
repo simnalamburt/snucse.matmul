@@ -67,8 +67,9 @@ OPTIONS:
   //
   // Start timer
   //
-  struct timespec begin;
-  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin);
+  struct timespec begin_cpu, begin_mono;
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin_cpu);
+  clock_gettime(CLOCK_MONOTONIC, &begin_mono);
 
 
   //
@@ -149,9 +150,12 @@ OPTIONS:
   //
   // Stop tiemr
   //
-  struct timespec end;
-  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
-  printf("Time elapsed : %lf ms\n", (end.tv_nsec - begin.tv_nsec)/1000000.0);
+  struct timespec end_cpu, end_mono;
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_cpu);
+  clock_gettime(CLOCK_MONOTONIC, &end_mono);
+  cout << "\nTime elapsed:\n"
+    "    monotonic   " << (end_mono.tv_nsec - begin_mono.tv_nsec)/1000000.0 << " ms\n"
+    "    cputime     " << (end_cpu. tv_nsec - begin_cpu. tv_nsec)/1000000.0 << " ms\n" << endl;
 
 
   //
