@@ -21,17 +21,16 @@ static void validate(void);
 //
 int main(int argc, char* argv[]) {
   // Parse argv
-  int opt;
-  while ((opt = getopt(argc, argv, "pvhikjs:")) != -1) {
+  for (int opt; (opt = getopt(argc, argv, "vh")) != -1;) {
     switch (opt) {
     case 'v': validation = true; break;
 
     case 'h':
     default:
       printf(
-          "Usage: %s [-pvh]\n"
+          "USAGE: %s [-pvh]\n"
           "\n"
-          "OPTIONS\n"
+          "OPTIONS:\n"
           "  -v : validate matrix multiplication.\n"
           "  -h : print this page.\n"
           , argv[0]);
