@@ -51,22 +51,20 @@ void mat_mul() {
 
 
 void check_mat_mul() {
-  puts("Validating the result..");
-
-  bool validated = true;
+  bool ok = true;
   for (int i = 0; i < NDIM; ++i) {
     for (int j = 0; j < NDIM; ++j) {
       float sum = 0;
       for (int k = 0; k < NDIM; ++k) { sum += a[i][k] * b[k][j]; }
 
       if (c[i][j] == sum) { continue; }
-      printf("c[%d][%d] is differ(value=%lf correct_value=%lf)!!\n", i, j, c[i][j], sum);
-      validated = false;
+      printf("In c[%d][%d], expected %lf but it was %lf\n", i, j, sum, c[i][j]);
+      ok = false;
     }
   }
 
-  printf("Validation : ");
-  puts(validated ? "SUCCESSFUL." : "FAILED.");
+  if (ok) { return; }
+  puts("Test failed");
 }
 
 void print_mat(float mat[NDIM][NDIM]) {
