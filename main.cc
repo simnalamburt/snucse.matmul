@@ -1,12 +1,9 @@
-#define _POSIX_C_SOURCE 199309L
 #include <iostream>
 #include <memory>
 #include <string>
 #include <array>
 #include <chrono>
-#include <ctime>
 #include <cstring>
-#include <unistd.h>
 #include <CL/cl.h>
 
 using namespace std;
