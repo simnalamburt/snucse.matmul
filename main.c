@@ -8,14 +8,71 @@
 
 #define NDIM 2048
 static float a[NDIM][NDIM], b[NDIM][NDIM], c[NDIM][NDIM];
-static bool print_matrix = false, validation = false;
+static bool validation = false;
 static const int THREAD_COUNT = 4;
 
+static void *per_thread(void*);
+static void mat_mul(void);
+static void validate(void);
+
+
+//
+// Entry point
+//
+int main(int argc, char* argv[]) {
+  // Parse argv
+  int opt;
+  while ((opt = getopt(argc, argv, "pvhikjs:")) != -1) {
+    switch (opt) {
+    case 'v': validation = true; break;
+
+    case 'h':
+    default:
+      printf(
+          "Usage: %s [-pvh]\n"
+          "\n"
+          "OPTIONS\n"
+          "  -v : validate matrix multiplication.\n"
+          "  -h : print this page.\n"
+          , argv[0]);
+      exit(opt != 'h');
+    }
+  }
+
+  // Initialize a[][], b[][]
+  int k = 1;
+  for (int i = 0; i < NDIM; ++i) {
+    for (int j = 0; j < NDIM; ++j) {
+      a[i][j] = k;
+      b[i][j] = k;
+      k++;
+    }
+  }
+
+  // Start timer
+  struct timespec begin;
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin);
+
+  // Calculate
+  mat_mul();
+
+  // Stop tiemr
+  struct timespec end;
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+  printf("Time elapsed : %lf ms\n", (end.tv_nsec - begin.tv_nsec)/1000000.0);
+  if (validation) { validate(); }
+  return 0;
+}
+
+
+//
+// Computation codes
+//
 typedef struct {
   int begin, end;
 } data_t;
 
-void* per_thread(void* param) {
+void *per_thread(void* param) {
   data_t* data = (data_t*)param;
   for (int i = data->begin; i < data->end; ++i) {
     for (int k = 0; k < NDIM; ++k) {
@@ -27,7 +84,7 @@ void* per_thread(void* param) {
   return NULL;
 }
 
-void mat_mul() {
+void mat_mul(void) {
   size_t number = THREAD_COUNT;
   pthread_t thread[number];
   data_t data[number];
@@ -45,7 +102,10 @@ void mat_mul() {
 }
 
 
-void check_mat_mul() {
+//
+// Validation
+//
+void validate(void) {
   bool ok = true;
   for (int i = 0; i < NDIM; ++i) {
     for (int j = 0; j < NDIM; ++j) {
@@ -60,86 +120,4 @@ void check_mat_mul() {
 
   if (ok) { return; }
   puts("Test failed");
-}
-
-void print_mat(float mat[NDIM][NDIM]) {
-  for (int i = 0; i < NDIM; ++i) {
-    for (int j = 1; j < NDIM; ++j) {
-      printf("%8.2lf ", mat[i][j]);
-    }
-    printf("\n");
-  }
-}
-
-void parse_opt(int argc, char* argv[]) {
-  int opt;
-  while ((opt = getopt(argc, argv, "pvhikjs:")) != -1) {
-    switch (opt) {
-    case 'p': print_matrix = true; break;
-    case 'v': validation = true; break;
-
-    case 'h':
-    default:
-      printf(
-          "Usage: %s [-pvh]\n"
-          "\n"
-          "OPTIONS\n"
-          "  -p : print matrix data.\n"
-          "  -v : validate matrix multiplication.\n"
-          "  -h : print this page.\n"
-          , argv[0]);
-      exit(opt != 'h');
-    }
-  }
-}
-
-
-typedef struct timespec timespec_t;
-
-// call this function to start a nanosecond-resolution timer
-timespec_t timer_start() {
-  timespec_t begin;
-  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin);
-  return begin;
-}
-
-// call this function to end a timer, returning nanoseconds elapsed as a long
-long timer_end(timespec_t begin) {
-  timespec_t end;
-  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
-  return end.tv_nsec - begin.tv_nsec;
-}
-
-int main(int argc, char* argv[]) {
-  parse_opt(argc, argv);
-
-  int k = 1;
-  for (int i = 0; i < NDIM; ++i) {
-    for (int j = 0; j < NDIM; ++j) {
-      a[i][j] = k;
-      b[i][j] = k;
-      k++;
-    }
-  }
-
-  timespec_t begin = timer_start();
-  mat_mul();
-  long elapsed = timer_end(begin);
-
-  printf("Time elapsed : %lf ms\n", elapsed / 1000000.0);
-
-  if (validation) { check_mat_mul(); }
-
-  if (print_matrix) {
-    puts("MATRIX A:");
-    print_mat(a);
-
-    puts("MATRIX B:");
-    print_mat(b);
-
-    puts("MATRIX C:");
-    print_mat(c);
-  }
-
-  return 0;
 }
