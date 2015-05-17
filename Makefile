@@ -1,14 +1,5 @@
-TARGET=bin
-
-CC=g++
-CFLAGS=-O3 -Wall -Wextra -std=c++0x
-LDFLAGS=-lOpenCL -lrt
-
 all: main.cc
-	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $(TARGET)
+	g++ -O3 -Wall -Wextra -std=c++0x $^ -lOpenCL -lrt -o bin
 
-clean:
-	rm -f $(TARGET)
-
-run: $(TARGET)
-	thorq --add ./$(TARGET) -v
+run: bin
+	@thorq --add bin -n10000
