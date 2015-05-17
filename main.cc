@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 199309L
 #include <iostream>
 #include <memory>
+#include <string>
 #include <array>
 #include <ctime>
 #include <cstring>
@@ -22,20 +23,29 @@ int main(int argc, char* argv[]) {
   //
   // Parse argv
   //
+  size_t width = 2048;
   bool validation = false;
-  for (int opt; (opt = getopt(argc, argv, "vh")) != -1;) {
+  for (int opt; (opt = getopt(argc, argv, "n:vh")) != -1;) {
     switch (opt) {
-    case 'v': validation = true; break;
-    case 'h': default:
-      auto format = R"(Parallel Matrix Multiplier
+    case 'n':
+      width = stoul(string(optarg));
+      break;
 
-USAGE: %s [-pvh]
+    case 'v':
+      validation = true;
+      break;
+
+    case 'h':
+    default:
+      cout << R"(Parallel Matrix Multiplier
+
+USAGE: )" << argv[0] << R"( [-pvh]
 
 OPTIONS:
--v : validate matrix multiplication.
--h : print this page.
+  -n <N>    Change width of a matrix (N*N). Default size is 2048.
+  -v        Validate calculate results.
+  -h        Print this page.
 )";
-      printf(format, argv[0]);
       exit(opt != 'h');
     }
   }
@@ -44,7 +54,6 @@ OPTIONS:
   //
   // Initialize host buffer
   //
-  const size_t width = 2048;
   auto lhs    = unique_ptr<float[]>(new float[width*width]);
   auto rhs    = unique_ptr<float[]>(new float[width*width]);
   auto result = unique_ptr<float[]>(new float[width*width]);
