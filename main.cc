@@ -94,12 +94,12 @@ OPTIONS:
         __global float *lhs,
         __global float *rhs,
         __global float *result,
-        int width)
+        ulong width)
     {
-      int i = get_global_id(0);
-      int j = get_global_id(1);
+      ulong i = get_global_id(0);
+      ulong j = get_global_id(1);
       float sum = 0.0f;
-      for (int k = 0; k < width; ++k) {
+      for (ulong k = 0; k < width; ++k) {
         sum += lhs[j*width + k]*rhs[k*width + i];
       }
       result[j*width + i] = sum;
@@ -134,7 +134,7 @@ OPTIONS:
   check(clSetKernelArg(kernel, 0, sizeof(cl_mem), &buffer_lhs));
   check(clSetKernelArg(kernel, 1, sizeof(cl_mem), &buffer_rhs));
   check(clSetKernelArg(kernel, 2, sizeof(cl_mem), &buffer_result));
-  check(clSetKernelArg(kernel, 3, sizeof(cl_int), &width));
+  check(clSetKernelArg(kernel, 3, sizeof(cl_ulong), &width));
 
   check(clEnqueueWriteBuffer(cmdq, buffer_lhs, CL_FALSE, 0, size, lhs.get(), 0, NULL, NULL));
   check(clEnqueueWriteBuffer(cmdq, buffer_rhs, CL_FALSE, 0, size, rhs.get(), 0, NULL, NULL));
