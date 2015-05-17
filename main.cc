@@ -140,7 +140,8 @@ OPTIONS:
   check(clEnqueueWriteBuffer(cmdq, buffer_rhs, CL_FALSE, 0, size, rhs.get(), 0, NULL, NULL));
 
   array<size_t, 2> global = {{ width, width }};
-  check(clEnqueueNDRangeKernel(cmdq, kernel, 2, NULL, global.data(), NULL, 0, NULL, NULL));
+  array<size_t, 2> local = {{ 16, 16 }};
+  check(clEnqueueNDRangeKernel(cmdq, kernel, 2, NULL, global.data(), local.data(), 0, NULL, NULL));
   check(clEnqueueReadBuffer(cmdq, buffer_result, CL_TRUE, 0, size, result.get(), 0, NULL, NULL));
 
 
