@@ -11,7 +11,7 @@ using namespace chrono;
 
 namespace {
   void simple(size_t, bool);
-  void tile(size_t, bool);
+  void tile(size_t);
 
   void check(cl_int);
   template<typename T> bool validate(const T&, const T&, const T&, size_t);
@@ -55,7 +55,7 @@ OPTIONS:
   if (width < 32768) {
     simple(width, validation);
   } else {
-    tile(width, validation);
+    tile(width);
   }
   return 0;
 }
@@ -188,163 +188,7 @@ void simple(size_t width, bool validation) {
   check(clReleaseCommandQueue(cmdq));
 }
 
-void tile(size_t width, bool validation) {
-  const size_t block = 1200;
-
-  //
-  // Initialize host buffer
-  //
-  auto lhs    = unique_ptr<float[]>(new float[width*width]);
-  auto rhs    = unique_ptr<float[]>(new float[width*width]);
-  auto result = unique_ptr<float[]>(new float[width*width]);
-
-  cout << "Initializing " << width << '*' << width << " sized matrices... ";
-  for (size_t i = 0; i < width*width; ++i) { lhs[i] = rhs[i] = float(i) + 1.0f; }
-  cout << "Done" << endl;
-
-
-  //
-  // Start timer
-  //
-  auto begin = system_clock::now();
-
-
-  //
-  // Initialize OpenCL resources
-  //
-  cl_platform_id platform;
-  check(clGetPlatformIDs(1, &platform, NULL));
-
-  cl_device_id device;
-  check(clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL));
-
-  cl_int e;
-  auto ctxt = clCreateContext(NULL, 1, &device, NULL, NULL, &e); check(e);
-  auto cmdq = clCreateCommandQueue(ctxt, device, 0, &e); check(e);
-
-  const size_t size = width*block*sizeof(float);
-  const size_t size_result = block*block*sizeof(float);
-  auto buffer_lhs = clCreateBuffer(ctxt, CL_MEM_READ_ONLY, size, NULL, &e); check(e);
-  auto buffer_rhs = clCreateBuffer(ctxt, CL_MEM_READ_ONLY, size, NULL, &e); check(e);
-  auto buffer_result = clCreateBuffer(ctxt, CL_MEM_WRITE_ONLY, size_result, NULL, &e); check(e);
-
-
-  //
-  // Compile OpenCL kernel codes
-  //
-  auto code = R"(
-    __kernel void multiply(
-        __global float *lhs,
-        __global float *rhs,
-        __global float *result,
-        ulong width_lhs, ulong width_rhs)
-    {
-      ulong i = get_global_id(0);
-      ulong j = get_global_id(1);
-      float sum = 0.0f;
-      for (ulong k = 0; k < width_lhs; ++k) {
-        sum += lhs[j*width_lhs + k]*rhs[k*width_rhs + i];
-      }
-      result[j*width_rhs + i] = sum;
-    }
-  )";
-  const auto codelen = strlen(code);
-  auto program = clCreateProgramWithSource(ctxt, 1, &code, &codelen, &e); check(e);
-  e = clBuildProgram(program, 1, &device, NULL, NULL, NULL);
-  if (e == CL_BUILD_PROGRAM_FAILURE) {
-    // Print detailed message
-    cerr << endl;
-    cerr << "OpenCL compile error" << endl;
-
-    size_t buflen = 2048;
-    auto buffer = unique_ptr<char[]>(new char[2048]);
-    clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, buflen, buffer.get(), NULL);
-    cerr << buffer.get() << endl;
-    clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_STATUS, buflen, buffer.get(), NULL);
-    cerr << buffer.get() << endl;
-    clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_OPTIONS, buflen, buffer.get(), NULL);
-    cerr << buffer.get() << endl;
-    exit(1);
-  }
-  check(e);
-
-
-  //
-  // Create kernel and calculate
-  //
-  auto kernel = clCreateKernel(program, "multiply", &e); check(e);
-
-  check(clSetKernelArg(kernel, 0, sizeof(cl_mem), &buffer_lhs));
-  check(clSetKernelArg(kernel, 1, sizeof(cl_mem), &buffer_rhs));
-  check(clSetKernelArg(kernel, 2, sizeof(cl_mem), &buffer_result));
-  check(clSetKernelArg(kernel, 3, sizeof(cl_ulong), &width));
-
-
-  //
-  // Temp buffer
-  //
-  auto temp_rhs = unique_ptr<float[]>(new float[width*block]);
-  auto temp_result = unique_ptr<float[]>(new float[block*block]);
-
-  array<size_t, 2> local = {{ 16, 16 }};
-  for (size_t offset_y = 0; offset_y < width; offset_y += block) {
-    for (size_t offset_x = 0; offset_x < width; offset_x += block) {
-      const size_t len_y = min(block, width - offset_y);
-      const size_t len_x = min(block, width - offset_x);
-      check(clSetKernelArg(kernel, 4, sizeof(cl_ulong), &len_x));
-
-      // Initialize temp buffer
-      for (size_t y = 0; y < width; ++y) {
-        for (size_t x = 0, i = offset_x; x < len_x; ++x, ++i) {
-          temp_rhs[y*block + x] = result[y*width + i];
-        }
-      }
-
-      // Calc
-      check(clEnqueueWriteBuffer(cmdq, buffer_lhs, CL_FALSE, 0, size, lhs.get() + width*offset_y, 0, NULL, NULL));
-      check(clEnqueueWriteBuffer(cmdq, buffer_rhs, CL_FALSE, 0, size, temp_rhs.get(), 0, NULL, NULL));
-
-      array<size_t, 2> global = {{ len_x, len_y }};
-      check(clEnqueueNDRangeKernel(cmdq, kernel, 2, NULL, global.data(), local.data(), 0, NULL, NULL));
-      check(clEnqueueReadBuffer(cmdq, buffer_result, CL_TRUE, 0, size_result, temp_result.get(), 0, NULL, NULL));
-
-      // Write back to original buffer
-      for (size_t y = 0, j = offset_y; y < len_y; ++y, ++j) {
-        for (size_t x = 0, i = offset_x; x < len_x; ++x, ++i) {
-          result[j*width + i] = temp_result[y*block + x];
-        }
-      }
-    }
-  }
-
-
-  //
-  // Stop tiemr
-  //
-  auto end = system_clock::now();
-  cout << "\nTime elapsed: " << duration<double>(end - begin).count() << "s\n" << endl;
-
-
-  //
-  // Validation
-  //
-  if (validation) {
-    cout << "Validating";
-    cout << (validate(lhs, rhs, result, width) ? "OK" : "Failed") << endl;
-  }
-
-
-  //
-  // Release OpenCL resources
-  //
-  check(clReleaseMemObject(buffer_lhs));
-  check(clReleaseMemObject(buffer_rhs));
-  check(clReleaseMemObject(buffer_result));
-  check(clReleaseContext(ctxt));
-  check(clReleaseKernel(kernel));
-  check(clReleaseProgram(program));
-  check(clReleaseCommandQueue(cmdq));
-}
+void tile(size_t) { }
 
 }
 
