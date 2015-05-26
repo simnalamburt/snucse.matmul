@@ -7,4 +7,5 @@ Matrix Multiplication
 * `part-b`: 타일링에 따른 성능변화 실험
 * `pthread`: pthread를 쓴 병렬화
 * `part-c-weak`, `part-c-strong`: pthread 스레드 수에 따른 성능변화 실험
-* `master`: OpenCL을 쓴 병렬화
+* `opencl`: OpenCL을 쓴 병렬화
+* `master`: OpenMP을 쓴 병렬화
