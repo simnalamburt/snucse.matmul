@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <chrono>
+#include <omp.h>
 
 using namespace std;
 using namespace chrono;
@@ -59,6 +60,7 @@ OPTIONS:
   auto begin = system_clock::now();
 
   // Calc
+  omp_set_num_threads(16);
   #pragma omp parallel for
   for (size_t i = 0; i < width; ++i) {
     for (size_t k = 0; k < width; ++k) {
