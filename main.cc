@@ -76,10 +76,13 @@ OPTIONS:
   //
   // Validation
   //
+  bool valid = true;
   if (validation) {
     cout << "Validating";
-    cout << (validate(lhs, rhs, result, width) ? "OK" : "Failed") << endl;
+    valid = validate(lhs, rhs, result, width);
+    cout << (valid ? "OK" : "Failed") << endl;
   }
+  return !valid;
 }
 
 
