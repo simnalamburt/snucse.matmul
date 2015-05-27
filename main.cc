@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
   //
   // Parse argv
   //
-  size_t width = 2048;
+  size_t width = 4096;
   bool validation = false;
   for (int opt; (opt = getopt(argc, argv, "n:vh")) != -1;) {
     switch (opt) {
