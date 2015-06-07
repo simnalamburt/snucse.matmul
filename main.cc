@@ -27,25 +27,57 @@ public:
 };
 
 
+using namespace std;
+
+
+//
+// Root-Only variables
+//
+
+
 //
 // Entry point
 //
 int main(int argc, char **argv) {
-  using namespace std;
   const mpi mpi(argc, argv);
 
-  int n;
+  size_t width = 4096;
+
+  // Root-Only variables
+  bool validation = false;
+
   if (mpi.root()) {
-    cout << "Enter a number: " << flush;
-    cin >> n;
+    for (int opt; (opt = getopt(argc, argv, "n:vh")) != -1;) {
+      switch (opt) {
+      case 'n':
+        width = stoul(string(optarg));
+        break;
+
+      case 'v':
+        validation = true;
+        break;
+
+      case 'h':
+      default:
+        cout << R"(Parallel Matrix Multiplier
+
+USAGE: )" << argv[0] << R"( [-pvh]
+
+OPTIONS:
+  -n <N>    Change width of a matrix (N*N). Default size is 2048.
+  -v        Validate calculate results.
+  -h        Print this page.
+)";
+      }
+    }
   }
 
-  MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&width, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  cout << "(" << mpi.rank() << "/" << mpi.size() << ") : " << n << endl;
+  cout << "(" << mpi.rank() << "/" << mpi.size() << ") : " << width << endl;
 
   int sum;
-  MPI_Reduce(&n, &sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&width, &sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
   if (mpi.root()) {
     cout << "Sum = " << sum << endl;
