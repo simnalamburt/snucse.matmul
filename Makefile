@@ -1,5 +1,5 @@
 all: main.cc
-	g++ -O3 -Wall -Wextra -std=c++0x -fopenmp $^ -o bin
+	mpic++ -O3 -Wall -Wextra -std=c++0x $^ -o bin
 
 run: all
-	@thorq --add bin
+	mpirun -n 4 ./bin
