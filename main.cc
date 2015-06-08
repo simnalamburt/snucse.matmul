@@ -91,8 +91,8 @@ OPTIONS:
   MPI_Bcast(&rhs[0], width*width, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
   // Start timer
-  auto time = system_clock::now();
   MPI_Barrier(MPI_COMM_WORLD);
+  auto time = system_clock::now();
 
   // Calc
   for (size_t i = 0; i < width/mpi.size(); ++i) {
