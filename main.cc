@@ -40,7 +40,7 @@ namespace {
 int main(int argc, char **argv) {
   const mpi mpi(argc, argv);
 
-  size_t width = 4096;
+  size_t width = 8192;
 
   // Root-Only variables
   bool validation = false;
@@ -52,6 +52,7 @@ int main(int argc, char **argv) {
       switch (opt) {
       case 'n':
         width = stoul(string(optarg));
+        if (width % mpi.size() != 0) { MPI_Abort(MPI_COMM_WORLD, 1); }
         break;
 
       case 'v':
@@ -69,6 +70,7 @@ OPTIONS:
   -v        Validate calculate results.
   -h        Print this page.
 )";
+        MPI_Abort(MPI_COMM_WORLD, opt != 'h');
       }
     }
   }
@@ -78,36 +80,52 @@ OPTIONS:
   // Initialize buffer
   auto lhs    = unique_ptr<float[]>(new float[width*width]);
   auto rhs    = unique_ptr<float[]>(new float[width*width]);
-  auto result = unique_ptr<float[]>(new float[width*width]);
+  auto result = unique_ptr<float[]>(new float[width*width]());
   for (size_t i = 0; i < width*width; ++i) { lhs[i] = rhs[i] = float(i) + 1.0f; }
 
   // Start timer
-  auto begin = system_clock::now();
+  auto time = system_clock::now();
 
   // Beginning point
   MPI_Barrier(MPI_COMM_WORLD);
 
-  cout << "(" << mpi.rank() << "/" << mpi.size() << ") : " << width << endl;
+  const size_t begin = width*mpi.rank()/mpi.size();
+  const size_t end = width*(mpi.rank() + 1)/mpi.size();
 
-  int sum;
-  MPI_Reduce(&width, &sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  // Calc
+  for (size_t i = begin; i < end; ++i) {
+    for (size_t k = 0; k < width; ++k) {
+      for (size_t j = 0; j < width; ++j) {
+        result[i*width + j] += lhs[i*width + k] * rhs[k*width + j];
+      }
+    }
+  }
+
+  // Gather results
+  MPI_Gather(&result[begin*width], width*width/mpi.size(), MPI_FLOAT, &result[0], width*width/mpi.size(), MPI_FLOAT, 0, MPI_COMM_WORLD);
 
   // Stop timer
-  auto end = system_clock::now();
+  MPI_Barrier(MPI_COMM_WORLD);
+  auto elapsed = duration<double>(system_clock::now() - time).count();
   if (mpi.root()) {
-    cout << "\nTime elapsed: " << duration<double>(end - begin).count() << "s\n" << endl;
+    cout << "\nTime elapsed: " << elapsed << " 초\n" << endl;
   }
+
 
   //
   // Validation
   //
-  bool valid = true;
-  if (validation) {
-    cout << "Validating";
-    valid = validate(lhs, rhs, result, width);
-    cout << (valid ? "OK" : "Failed") << endl;
+  if (mpi.root()) {
+    bool valid = true;
+    if (validation) {
+      cout << "Validating";
+      valid = validate(lhs, rhs, result, width);
+      cout << (valid ? "OK" : "Failed") << endl;
+    }
+    if (!valid) { MPI_Abort(MPI_COMM_WORLD, 1); }
   }
-  return !valid;
+
+  return 0;
 }
 
 
