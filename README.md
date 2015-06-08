@@ -9,4 +9,4 @@ Matrix Multiplication
   * `part-c-weak`, `part-c-strong`: pthread 스레드 수에 따른 성능변화 실험
 * `opencl`: OpenCL을 쓴 병렬화
 * `openmp`: OpenMP을 쓴 병렬화
-* `mpi`: MPI을 쓴 병렬화
+* `master`: MPI을 쓴 병렬화
