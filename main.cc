@@ -77,23 +77,25 @@ OPTIONS:
 
   MPI_Bcast(&width, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  // Initialize buffer
-  auto lhs    = unique_ptr<float[]>(new float[width*width]);
+  // Allocate buffers
+  const size_t part = width*width/mpi.size();
+  auto lhs    = unique_ptr<float[]>(new float[mpi.root() ? width*width : part]);
   auto rhs    = unique_ptr<float[]>(new float[width*width]);
-  auto result = unique_ptr<float[]>(new float[width*width]());
-  for (size_t i = 0; i < width*width; ++i) { lhs[i] = rhs[i] = float(i) + 1.0f; }
+  auto result = unique_ptr<float[]>(new float[mpi.root() ? width*width : part]());
+
+  // Initialize buffers
+  if (mpi.root()) {
+    for (size_t i = 0; i < width*width; ++i) { lhs[i] = rhs[i] = float(i) + 1.0f; }
+  }
+  MPI_Scatter(&lhs[0], part, MPI_FLOAT, &lhs[0], part, MPI_FLOAT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&rhs[0], width*width, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
   // Start timer
   auto time = system_clock::now();
-
-  // Beginning point
   MPI_Barrier(MPI_COMM_WORLD);
 
-  const size_t begin = width*mpi.rank()/mpi.size();
-  const size_t end = width*(mpi.rank() + 1)/mpi.size();
-
   // Calc
-  for (size_t i = begin; i < end; ++i) {
+  for (size_t i = 0; i < width/mpi.size(); ++i) {
     for (size_t k = 0; k < width; ++k) {
       for (size_t j = 0; j < width; ++j) {
         result[i*width + j] += lhs[i*width + k] * rhs[k*width + j];
@@ -102,10 +104,9 @@ OPTIONS:
   }
 
   // Gather results
-  MPI_Gather(&result[begin*width], width*width/mpi.size(), MPI_FLOAT, &result[0], width*width/mpi.size(), MPI_FLOAT, 0, MPI_COMM_WORLD);
+  MPI_Gather(&result[0], part, MPI_FLOAT, &result[0], part, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
   // Stop timer
-  MPI_Barrier(MPI_COMM_WORLD);
   auto elapsed = duration<double>(system_clock::now() - time).count();
   if (mpi.root()) {
     cout << "\nTime elapsed: " << elapsed << " 초\n" << endl;
